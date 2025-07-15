@@ -1,0 +1,75 @@
+// schema.prisma
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model PropertyAgent {
+  id           String     @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String     @unique
+  mobileNumber String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relationships
+  properties   Property[]
+  notes        Note[]
+}
+
+model Property {
+  id           String     @id @default(uuid())
+  address      String
+  city         String
+  postalCode   String
+  country      String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relationships
+  agentId      String
+  agent        PropertyAgent   @relation(fields: [agentId], references: [id])
+  tenants      Tenant[]
+  notes        Note[]
+}
+
+model Tenant {
+  id           String     @id @default(uuid())
+  firstName    String
+  lastName     String
+  email        String
+  phone        String
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relationships
+  propertyId   String
+  property     Property   @relation(fields: [propertyId], references: [id])
+}
+
+model Note {
+  id           String     @id @default(uuid())
+  content      String
+  type         NoteType
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relationships (optional polymorphic-like)
+  agentId      String?    
+  propertyId   String?    
+
+  agent        PropertyAgent? @relation(fields: [agentId], references: [id])
+  property     Property?      @relation(fields: [propertyId], references: [id])
+}
+
+enum NoteType {
+  MAINTENANCE
+  REMINDER
+  OTHER
+}
